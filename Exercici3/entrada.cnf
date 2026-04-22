@@ -1,0 +1,5 @@
+c Prova de traductor
+p cnf 4 3
+1 2 -3 0
+-1 4 0
+2 -4 0
