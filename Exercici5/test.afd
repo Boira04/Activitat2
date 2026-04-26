@@ -1,0 +1,12 @@
+// AFD correcte: accepta cadenes sobre {a, b} que acaben amb 'a'
+// Estats: q0 (inicial), q1 (final)
+alfabet { a, b }
+estats { q0, q1 }
+inicial q0
+finals { q1 }
+transicions {
+    q0 : a -> q1;
+    q0 : b -> q0;
+    q1 : a -> q1;
+    q1 : b -> q0;
+}

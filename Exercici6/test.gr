@@ -1,0 +1,7 @@
+// Exemple gramatica LL(1) sense cicles ni produccions buides
+S : aAc | fA | Bdef
+;
+B : Ab | Ad | k
+;
+A : ilm | ml
+;
