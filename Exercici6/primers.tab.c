@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 1 "traductor.y"
+#line 1 "primers.y"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,12 +76,78 @@ extern int yylex();
 extern int yylineno;
 void yyerror(const char *s);
 
-int vars_esperades = 0;
-int clausules_esperades = 0;
-int clausules_comptades = 0;
-int primer_literal = 1;
+#define MAX_PRODS 200
 
-#line 85 "traductor.tab.c"
+/* Ordre de definicio dels no terminals (per preservar l'ordre de sortida) */
+int nt_order[26];
+int nt_count  = 0;
+int nt_defined[26];
+
+/*
+ * Primer simbol de cada produccio per a cada no terminal.
+ * Codificacio: 0-25 = terminal (a-z), 26-51 = no terminal (A-Z).
+ */
+int prods[26][MAX_PRODS];
+int prod_cnt[26];
+
+/* Taula FIRST: first[nt][t] = 1 si el terminal t pertany a FIRST(nt) */
+int first_set[26][26];
+
+int current_nt = -1;
+
+void define_nt(char c) {
+    int idx = c - 'A';
+    if (!nt_defined[idx]) {
+        nt_defined[idx] = 1;
+        nt_order[nt_count++] = idx;
+    }
+    current_nt = idx;
+}
+
+void record_prod(int sym) {
+    if (current_nt < 0 || prod_cnt[current_nt] >= MAX_PRODS) return;
+    prods[current_nt][prod_cnt[current_nt]++] = sym;
+}
+
+void compute_first() {
+    /* Pas 1: afegir directament els terminals que encapçalen produccions */
+    for (int i = 0; i < 26; i++)
+        for (int p = 0; p < prod_cnt[i]; p++) {
+            int s = prods[i][p];
+            if (s < 26) first_set[i][s] = 1;
+        }
+
+    /* Pas 2: propagar a traves dels no terminals (punt fix) */
+    int changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int i = 0; i < 26; i++)
+            for (int p = 0; p < prod_cnt[i]; p++) {
+                int s = prods[i][p];
+                if (s >= 26) {
+                    int nt = s - 26;
+                    for (int t = 0; t < 26; t++) {
+                        if (first_set[nt][t] && !first_set[i][t]) {
+                            first_set[i][t] = 1;
+                            changed = 1;
+                        }
+                    }
+                }
+            }
+    }
+}
+
+void print_first() {
+    for (int k = 0; k < nt_count; k++) {
+        int i = nt_order[k];
+        printf("%c=", 'A' + i);
+        for (int t = 0; t < 26; t++)
+            if (first_set[i][t]) printf(" %c", 'a' + t);
+        printf("\n");
+    }
+}
+
+#line 151 "primers.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -104,7 +170,7 @@ int primer_literal = 1;
 #  endif
 # endif
 
-#include "traductor.tab.h"
+#include "primers.tab.h"
 /* Symbol kind.  */
 enum yysymbol_kind_t
 {
@@ -112,16 +178,20 @@ enum yysymbol_kind_t
   YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
-  YYSYMBOL_P_HEADER = 3,                   /* P_HEADER  */
-  YYSYMBOL_CNF = 4,                        /* CNF  */
-  YYSYMBOL_ZERO = 5,                       /* ZERO  */
-  YYSYMBOL_INT = 6,                        /* INT  */
-  YYSYMBOL_YYACCEPT = 7,                   /* $accept  */
-  YYSYMBOL_axioma = 8,                     /* axioma  */
-  YYSYMBOL_capcalera = 9,                  /* capcalera  */
-  YYSYMBOL_llista_clausules = 10,          /* llista_clausules  */
-  YYSYMBOL_clausula = 11,                  /* clausula  */
-  YYSYMBOL_literals = 12                   /* literals  */
+  YYSYMBOL_NONTERMINAL = 3,                /* NONTERMINAL  */
+  YYSYMBOL_TERMINAL = 4,                   /* TERMINAL  */
+  YYSYMBOL_COLON = 5,                      /* COLON  */
+  YYSYMBOL_PIPE = 6,                       /* PIPE  */
+  YYSYMBOL_SEMI = 7,                       /* SEMI  */
+  YYSYMBOL_YYACCEPT = 8,                   /* $accept  */
+  YYSYMBOL_grammar = 9,                    /* grammar  */
+  YYSYMBOL_rules = 10,                     /* rules  */
+  YYSYMBOL_rule = 11,                      /* rule  */
+  YYSYMBOL_12_1 = 12,                      /* $@1  */
+  YYSYMBOL_alts = 13,                      /* alts  */
+  YYSYMBOL_alt = 14,                       /* alt  */
+  YYSYMBOL_symbols = 15,                   /* symbols  */
+  YYSYMBOL_symbol = 16                     /* symbol  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -447,21 +517,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  5
+#define YYFINAL  8
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   10
+#define YYLAST   14
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  7
+#define YYNTOKENS  8
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  6
+#define YYNNTS  9
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  8
+#define YYNRULES  14
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  15
+#define YYNSTATES  21
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   261
+#define YYMAXUTOK   262
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -501,14 +571,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6
+       5,     6,     7
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    25,    25,    36,    44,    45,    49,    57,    69
+       0,    93,    93,    97,    98,   102,   102,   103,   107,   108,
+     112,   116,   117,   121,   122
 };
 #endif
 
@@ -524,9 +595,9 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "P_HEADER", "CNF",
-  "ZERO", "INT", "$accept", "axioma", "capcalera", "llista_clausules",
-  "clausula", "literals", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "NONTERMINAL",
+  "TERMINAL", "COLON", "PIPE", "SEMI", "$accept", "grammar", "rules",
+  "rule", "$@1", "alts", "alt", "symbols", "symbol", YY_NULLPTR
 };
 
 static const char *
@@ -536,12 +607,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-6)
+#define YYPACT_NINF (-11)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-1)
+#define YYTABLE_NINF (-3)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -550,8 +621,9 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -1,     0,     3,     1,     2,    -6,    -6,     1,    -6,    -5,
-       4,    -6,    -6,    -6,    -6
+       1,     4,     7,     8,     0,   -11,   -11,   -11,   -11,   -11,
+       2,   -11,   -11,     3,   -11,     2,   -11,     2,   -11,   -11,
+     -11
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -559,20 +631,21 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     0,     0,     1,     7,     2,     4,     0,
-       0,     5,     6,     8,     3
+       0,     0,     0,     0,     0,     3,     7,     5,     1,     4,
+       0,    14,    13,     0,     8,    10,    11,     0,     6,    12,
+       9
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -6,    -6,    -2,    -6
+     -11,   -11,   -11,     9,   -11,   -11,   -10,   -11,    -1
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     2,     3,     7,     8,     9
+       0,     3,     4,     5,    10,    13,    14,    15,    16
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -580,34 +653,37 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      12,    13,     1,     5,     4,    11,     0,     6,    10,     0,
-      14
+      -2,     1,     1,     2,     2,    11,    12,    20,     8,    17,
+      18,     6,     7,     9,    19
 };
 
 static const yytype_int8 yycheck[] =
 {
-       5,     6,     3,     0,     4,     7,    -1,     6,     6,    -1,
-       6
+       0,     1,     1,     3,     3,     3,     4,    17,     0,     6,
+       7,     7,     5,     4,    15
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     8,     9,     4,     0,     6,    10,    11,    12,
-       6,    11,     5,     6,     6
+       0,     1,     3,     9,    10,    11,     7,     5,     0,    11,
+      12,     3,     4,    13,    14,    15,    16,     6,     7,    16,
+      14
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,     7,     8,     9,    10,    10,    11,    12,    12
+       0,     8,     9,    10,    10,    12,    11,    11,    13,    13,
+      14,    15,    15,    16,    16
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     4,     1,     2,     2,     1,     2
+       0,     2,     1,     1,     2,     0,     5,     2,     1,     3,
+       1,     1,     2,     1,     1
 };
 
 
@@ -1070,68 +1146,68 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* axioma: capcalera llista_clausules  */
-#line 25 "traductor.y"
-                               {
-        if (clausules_comptades != clausules_esperades) {
-            fprintf(stderr, "\nError semàntic: S'esperaven %d clàusules, però n'hi ha %d.\n", 
-                    clausules_esperades, clausules_comptades);
-        } else {
-            printf("\n");
-        }
-    }
-#line 1084 "traductor.tab.c"
+  case 2: /* grammar: rules  */
+#line 93 "primers.y"
+          { compute_first(); print_first(); }
+#line 1153 "primers.tab.c"
     break;
 
-  case 3: /* capcalera: P_HEADER CNF INT INT  */
-#line 36 "traductor.y"
-                         {
-        vars_esperades = (yyvsp[-1].val);
-        clausules_esperades = (yyvsp[0].val);
-        printf("%d variables, %d clàusules\n\n", (yyvsp[-1].val), (yyvsp[0].val));
-    }
-#line 1094 "traductor.tab.c"
+  case 5: /* $@1: %empty  */
+#line 102 "primers.y"
+                      { define_nt((yyvsp[-1].ch)); }
+#line 1159 "primers.tab.c"
     break;
 
-  case 6: /* clausula: literals ZERO  */
-#line 49 "traductor.y"
-                  {
-        printf(")");
-        clausules_comptades++;
-        primer_literal = 1;
-    }
-#line 1104 "traductor.tab.c"
+  case 7: /* rule: error SEMI  */
+#line 103 "primers.y"
+                 { yyerrok; }
+#line 1165 "primers.tab.c"
     break;
 
-  case 7: /* literals: INT  */
-#line 57 "traductor.y"
-        {
-        if (primer_literal) {
-            if (clausules_comptades > 0) printf(" ^ ");
-            printf("(");
-            primer_literal = 0;
-        } else {
-            printf(" v ");
-        }
-
-        if ((yyvsp[0].val) > 0) printf("p%d", (yyvsp[0].val));
-        else printf("!p%d", -(yyvsp[0].val));
-    }
-#line 1121 "traductor.tab.c"
+  case 8: /* alts: alt  */
+#line 107 "primers.y"
+                    { record_prod((yyvsp[0].val)); }
+#line 1171 "primers.tab.c"
     break;
 
-  case 8: /* literals: literals INT  */
-#line 69 "traductor.y"
-                   {
-        printf(" v ");
-        if ((yyvsp[0].val) > 0) printf("p%d", (yyvsp[0].val));
-        else printf("!p%d", -(yyvsp[0].val));
-    }
-#line 1131 "traductor.tab.c"
+  case 9: /* alts: alts PIPE alt  */
+#line 108 "primers.y"
+                    { record_prod((yyvsp[0].val)); }
+#line 1177 "primers.tab.c"
+    break;
+
+  case 10: /* alt: symbols  */
+#line 112 "primers.y"
+            { (yyval.val) = (yyvsp[0].val); }
+#line 1183 "primers.tab.c"
+    break;
+
+  case 11: /* symbols: symbol  */
+#line 116 "primers.y"
+                     { (yyval.val) = (yyvsp[0].val); }
+#line 1189 "primers.tab.c"
+    break;
+
+  case 12: /* symbols: symbols symbol  */
+#line 117 "primers.y"
+                     { (yyval.val) = (yyvsp[-1].val); /* conservem el primer simbol */ }
+#line 1195 "primers.tab.c"
+    break;
+
+  case 13: /* symbol: TERMINAL  */
+#line 121 "primers.y"
+                { (yyval.val) = (yyvsp[0].ch) - 'a'; }
+#line 1201 "primers.tab.c"
+    break;
+
+  case 14: /* symbol: NONTERMINAL  */
+#line 122 "primers.y"
+                  { (yyval.val) = 26 + ((yyvsp[0].ch) - 'A'); }
+#line 1207 "primers.tab.c"
     break;
 
 
-#line 1135 "traductor.tab.c"
+#line 1211 "primers.tab.c"
 
       default: break;
     }
@@ -1324,13 +1400,22 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 76 "traductor.y"
+#line 125 "primers.y"
 
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Error sintàctic a la línia %d: %s\n", yylineno, s);
+    fprintf(stderr, "Error sintactic a la linia %d: %s\n", yylineno, s);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    extern FILE *yyin;
+    if (argc > 1) {
+        FILE *f = fopen(argv[1], "r");
+        if (!f) {
+            fprintf(stderr, "Error: no s'ha pogut obrir el fitxer '%s'\n", argv[1]);
+            return 1;
+        }
+        yyin = f;
+    }
     return yyparse();
 }

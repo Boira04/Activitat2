@@ -27,6 +27,7 @@ Per generar l'executable, simplement executa la comanda `make` a la carpeta arre
 
 Per compilar el projecte:
 ```bash
+make clean
 make
 ```
 

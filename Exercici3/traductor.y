@@ -27,7 +27,7 @@ axioma:
             fprintf(stderr, "\nError semàntic: S'esperaven %d clàusules, però n'hi ha %d.\n", 
                     clausules_esperades, clausules_comptades);
         } else {
-            printf("\n\nTraducció finalitzada correctament.\n");
+            printf("\n");
         }
     }
     ;
@@ -36,7 +36,7 @@ capcalera:
     P_HEADER CNF INT INT {
         vars_esperades = $3;
         clausules_esperades = $4;
-        printf("/* Traducció (%d variables, %d clàusules) */\n", $3, $4);
+        printf("%d variables, %d clàusules\n\n", $3, $4);
     }
     ;
 

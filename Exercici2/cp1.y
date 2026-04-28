@@ -40,16 +40,6 @@ stmtlist
         }
     ;
 
-/*
- * Gramàtica estratificada (sense conflictes shift/reduce):
- *   Precedència de menor (5) a major (1) prioritat:
- *   5. <-> i ->   (esquerra)
- *   4. or         (esquerra)
- *   3. and        (esquerra)
- *   2. forall, exists (dreta)
- *   1. not        (dreta)
- */
-
 formula
     : formula IMPLIES disj
     | formula IFF     disj
@@ -88,7 +78,6 @@ termlist
     | termlist COMMA term
     ;
 
-/* Un terme és una variable, una constant, o una funció aplicada a termes */
 term
     : VAR
     | IDSYM

@@ -19,6 +19,7 @@ Aquest programa implementa l'algorisme de **Ken Thompson** per convertir express
 
 Per compilar el projecte:
 ```bash
+make clean
 make
 ```
 

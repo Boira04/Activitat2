@@ -11,7 +11,7 @@ void yyerror(const char *s);
 #define MAX_ALPHA  50
 #define MAX_NAME   64
 
-/* --- Estructures de dades globals --- */
+
 char states[MAX_STATES][MAX_NAME];
 int  num_states = 0;
 
@@ -22,7 +22,7 @@ int initial_state    = -1;
 int final_states[MAX_STATES];
 int transitions[MAX_STATES][MAX_ALPHA];
 
-/* --- Funcions de cerca --- */
+
 int find_state(const char *name) {
     for (int i = 0; i < num_states; i++)
         if (strcmp(states[i], name) == 0) return i;
@@ -35,7 +35,7 @@ int find_symbol(const char *name) {
     return -1;
 }
 
-/* --- Funcions de construccio --- */
+
 void add_state(const char *name) {
     if (find_state(name) != -1) {
         fprintf(stderr, "Avis (linia %d): estat '%s' duplicat, s'ignora.\n", yylineno, name);
@@ -112,7 +112,7 @@ void add_transition(const char *from, const char *sym, const char *to) {
     transitions[fi][si] = ti;
 }
 
-/* --- Validacio i impressio --- */
+
 void validate_and_print() {
     int ok = 1;
 
@@ -177,7 +177,7 @@ void validate_and_print() {
         }
     }
 
-    /* Verificar condicions 2 i 3 per a cada estat */
+
     for (int i = 0; i < num_states; i++) {
         if (!reachable[i]) {
             fprintf(stderr,
@@ -198,9 +198,8 @@ void validate_and_print() {
         return;
     }
 
-    /* --- Impressio de la descripcio del AFD --- */
-    printf("\nAFD Correcte!\n");
-    printf("=============\n");
+
+    printf("\nAFD CORRECTE\n");
     printf("Estat inicial : %s\n", states[initial_state]);
     printf("Estats finals : ");
     for (int i = 0; i < num_states; i++)
@@ -211,7 +210,7 @@ void validate_and_print() {
     for (int a = 0; a < num_alpha; a++) printf("%s ", alpha[a]);
     printf("\n\n");
 
-    /* Taula de transicions */
+
     printf("Taula de transicions:\n");
     printf("  (-> = estat inicial, * = estat final)\n\n");
 
