@@ -1,0 +1,15 @@
+// Correctes a nivell sintactic
+forall x1 forall x2 (P1(x1, x2)-> P2(x2));
+(forall x1 (P1(x1,x2)<->(exists x2 P2(x2) and P3(x1,x2) or !P2(f1(x1,x2)))));
+(forall x1 (P1(x1,f2(f1(a1))))<->(exists x2 P2(x2) and P3(x1,x2) or !P2(f1(x1,x2))));
+
+// Incorrectes per errors lexics o sintactics
+// Tots els errors es detecten a nivell sintactic
+forall m1 forall m2 (P1(x1, x2) -> P2(x2));
+forall x1 forall x2 (P1(x1, x2) -> P2(x2);
+forall x1 forall x2 (P1(x1, x2) -> P2(x2)));
+FORALL x1 FORall m2 (P1(x1, x2) -> P2(x2));
+forall x1 exists x2 (P1(x1,x2) * (exits x2 P2(x2) + P3(x1,x2) or !P2(f1(x1,x2))));
+forall x1 : x1 >= 5 forall x2 . (P1(x1,x2) -> P2(x2));
+forall x1 forall x2 exits (P1(x1,x2) -> P2(x2) P3(a4);
+forall x1 (P1(x1,x2) forall (exists x2 P2(x2) !P3(x1,x2) forall !P2(f1(x1,x2)));
