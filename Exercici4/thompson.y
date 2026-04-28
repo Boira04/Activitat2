@@ -1,56 +1,30 @@
+%code requires {
+    /* Aquest bloc va al principi de tot, tant al .h com al .c */
+    typedef struct {
+        int inici;
+        int fi;
+    } AFN;
+}
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Declaracions estàndard */
 extern int yylex();
 extern int yylineno;
 void yyerror(const char *s);
 
-/* Estructura per representar una transició */
+/* Estructura interna per a les transicions */
 typedef struct {
     int inici;
     int fi;
-    char simbol; // 0 per a Lambda
+    char simbol; 
 } Transicio;
-
-/* Estructura per representar un fragment d'AFN */
-typedef struct {
-    int inici;
-    int fi;
-} AFN;
 
 Transicio taula[1000];
 int num_trans = 0;
 int comptador_estats = 1;
-
-/* Funcions auxiliars */
-int nou_estat() { return comptador_estats++; }
-
-void afegir_trans(int de, int a, char s) {
-    taula[num_trans].inici = de;
-    taula[num_trans].fi = a;
-    taula[num_trans].simbol = s;
-    num_trans++;
-}
-
-void imprimir_afn(AFN a) {
-    printf("Descripcio del AF:\n");
-    printf("Estats numerats del 1 al %d\n", comptador_estats - 1);
-    for(int i = 0; i < num_trans; i++) {
-        printf("[Estat %d, ", taula[i].inici);
-        if(taula[i].simbol == 0) printf("Lambda] ");
-        else printf("Simbol %c] ", taula[i].simbol);
-        printf("Go to %d\n", taula[i].fi);
-    }
-    printf("Estat inicial: %d\n", a.inici);
-    printf("Estat final: %d\n\n", a.fi);
-}
-
-void reiniciar_automata() {
-    num_trans = 0;
-    comptador_estats = 1;
-}
-
 %}
 
 %union {
@@ -58,10 +32,20 @@ void reiniciar_automata() {
     AFN afn;
 }
 
+/* AQUÍ ESTÀ LA SOLUCIÓ: 
+   El bloc %code (sense qualificadors) es posa DESPRÉS de la Union al fitxer .c,
+   per tant ja coneix què és AFN i no donarà error. */
+%code {
+    int nou_estat();
+    void afegir_trans(int de, int a, char s);
+    void imprimir_afn(AFN a);
+    void reiniciar_automata();
+}
+
 %token <simbol> SIMBOL
 %token LAMBDA OR CONCAT STAR PLUS QMARK LPAREN RPAREN SEMI
 
-/* Precedència de menor a major */
+/* Precedència d'operadors */
 %left OR
 %left CONCAT
 %left STAR PLUS QMARK
@@ -103,7 +87,6 @@ expressio:
         afegir_trans($3.fi, $$.fi, 0);
     }
     | expressio CONCAT expressio {
-        // Unim el final del primer amb l'inici del segon mitjançant Lambda
         afegir_trans($1.fi, $3.inici, 0);
         $$.inici = $1.inici;
         $$.fi = $3.fi;
@@ -136,6 +119,37 @@ expressio:
     ;
 
 %%
+
+/* SECCIÓ DE CODI C FINAL */
+
+int nou_estat() { 
+    return comptador_estats++; 
+}
+
+void afegir_trans(int de, int a, char s) {
+    taula[num_trans].inici = de;
+    taula[num_trans].fi = a;
+    taula[num_trans].simbol = s;
+    num_trans++;
+}
+
+void imprimir_afn(AFN a) {
+    printf("Descripció de l'AFN:\n");
+    printf("Estats numerats del 1 al %d\n", comptador_estats - 1);
+    for(int i = 0; i < num_trans; i++) {
+        printf("[Estat %d, ", taula[i].inici);
+        if(taula[i].simbol == 0) printf("Lambda] ");
+        else printf("Símbol %c] ", taula[i].simbol);
+        printf("Go to %d\n", taula[i].fi);
+    }
+    printf("Estat inicial: %d\n", a.inici);
+    printf("Estat final: %d\n\n", a.fi);
+}
+
+void reiniciar_automata() {
+    num_trans = 0;
+    comptador_estats = 1;
+}
 
 void yyerror(const char *s) {
     fprintf(stderr, "Error sintàctic a la línia %d: %s\n", yylineno, s);
